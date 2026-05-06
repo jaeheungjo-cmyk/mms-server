@@ -90,7 +90,7 @@ def init_db():
         type TEXT NOT NULL,
         tag_class TEXT DEFAULT 'tag-i',
         icon TEXT DEFAULT 'i',
-        desc TEXT DEFAULT ''
+        description TEXT DEFAULT ''
     )""")
 
     today = datetime.now().strftime('%Y-%m-%d')
