@@ -10,7 +10,7 @@ from flask_cors import CORS
 import sqlite3, hashlib, os, json
 from datetime import datetime
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder='.')
 CORS(app, resources={r"/api/*": {"origins": "*"}})  # 모든 출처 허용
 
 DB_PATH = 'mms.db'
@@ -189,7 +189,7 @@ def init_db():
 # ══════════════════════════════════════════
 @app.route('/')
 def index():
-    return send_from_directory('static', 'index.html')
+    return send_from_directory('.', 'index.html')
 
 @app.route('/static/<path:path>')
 def static_files(path):
