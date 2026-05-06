@@ -707,19 +707,7 @@ tr:hover td{background:#f9fafb;}
 // API 서버 주소 자동 결정
 // - Netlify(flourishing-phoenix-ae1253.netlify.app)에서 접속 시 → Render 서버 URL 사용
 // - localhost에서 접속 시 → 로컬 서버 사용
-const NETLIFY_DOMAINS = ['netlify.app', 'netlify.com'];
-const RENDER_API = 'https://mms-server-txlr.onrender.com';
-
-function getApiBase() {
-  const host = window.location.hostname;
-  // Netlify 도메인이면 Render 서버로
-  if (NETLIFY_DOMAINS.some(d => host.includes(d))) {
-    return RENDER_API;
-  }
-  // 로컬이면 같은 서버
-  return window.location.origin;
-}
-const API = getApiBase();
+const API = 'https://mms-server-txlr.onrender.com';
 const FMT = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const FMTDT = d => `${FMT(d)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 let currentUser=null,currentMotorId=null,scanMatId=null,refreshTimer=null;
