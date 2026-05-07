@@ -887,7 +887,7 @@ async function loadAllData(){
   ]);
   DB.motors=motors.map(m=>({
     ...m,matCode:m.mat_code,matId:m.mat_id,regDate:m.reg_date,regBy:m.reg_by,
-    history:(m.history||[]).map(h=>({dt:h.dt,type:h.type,fromLoc:h.from_loc,toLoc:h.to_loc,by:h.by_user,memo:h.memo}))
+    history:(m.history||[]).map(h=>({id:h.id,dt:h.dt,type:h.type,fromLoc:h.from_loc,toLoc:h.to_loc,by:h.by_user,memo:h.memo}))
   }));
   DB.locations=locs;DB.matCodes=codes.map(c=>({code:c.code,name:c.name,cat:c.cat}));
   DB.matIds=ids.map(i=>({id:i.id,name:i.name,ref:i.ref}));
@@ -1179,7 +1179,38 @@ async function addHistory(){
   await loadAllData();
   const updated=DB.motors.find(x=>x.id===currentMotorId);
   renderDetailHist(updated);renderMotorList();renderDashHist();
-  document.getElementById('hist-memo-add').value='';showToast('이력이 추가되었습니다.');
+document.getElementById('hist-memo-add').value='';showToast('이력이 추가되었습니다.');
+}
+
+let editHistIdx = null;
+function openEditHist(idx){
+  const m = DB.motors.find(x=>x.id===currentMotorId); if(!m) return;
+  const h = m.history[idx]; if(!h) return;
+  editHistIdx = idx;
+  document.getElementById('edit-hist-type').value = h.type;
+  document.getElementById('edit-hist-dt').value = h.dt.replace(' ','T');
+  document.getElementById('edit-hist-memo').value = h.memo||'';
+  const locOpts = DB.locations.map(l=>`<option value="${l.name}">${l.name}</option>`).join('');
+  document.getElementById('edit-hist-loc').innerHTML = '<option value="">-- 선택 --</option>'+locOpts;
+  document.getElementById('edit-hist-loc').value = h.toLoc||'';
+  openModal('modal-edit-hist');
+}
+async function saveEditHist(){
+  const m = DB.motors.find(x=>x.id===currentMotorId); if(!m) return;
+  const h = m.history[editHistIdx]; if(!h) return;
+  const hid = h.id;
+  if(!hid){showToast('이 이력은 수정할 수 없습니다','warn');return;}
+  const type = document.getElementById('edit-hist-type').value;
+  const toLoc = document.getElementById('edit-hist-loc').value;
+  const dt = document.getElementById('edit-hist-dt').value.replace('T',' ');
+  const memo = document.getElementById('edit-hist-memo').value.trim();
+  if(!toLoc){showToast('위치를 선택하세요','warn');return;}
+  await api(`/api/motors/${m.id}/history/${hid}`,'PUT',{type,toLoc,dt,memo});
+  closeModal('modal-edit-hist');
+  await loadAllData();
+  const updated = DB.motors.find(x=>x.id===currentMotorId);
+  renderDetailHist(updated); renderMotorList(); renderDashHist();
+  showToast('이력이 수정되었습니다.');
 }
 
 function renderHistory(){
