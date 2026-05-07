@@ -412,6 +412,14 @@ tr:hover td{background:#f9fafb;}
           <div class="metric clickable" onclick="openDashModal('out')"><div class="metric-lbl">오늘 반출</div><div class="metric-val a" id="dash-out-cnt">0</div><div class="metric-sub" id="dash-out-date"></div></div>
           <div class="metric clickable" onclick="openDashModal('special')"><div class="metric-lbl">특이 이력</div><div class="metric-val r" id="dash-special-cnt">0</div><div class="metric-sub">클릭하여 목록 보기</div></div>
         </div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--muted);font-weight:600;">조회 기간</span>
+          <input type="datetime-local" id="dash-from" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);">
+          <span style="font-size:12px;color:var(--muted);">~</span>
+          <input type="datetime-local" id="dash-to" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);">
+          <button class="btn" onclick="applyDashRange()" style="font-size:12px;padding:5px 12px;">적용</button>
+          <button class="btn" onclick="resetDashRange()" style="font-size:12px;padding:5px 12px;background:var(--surface2);color:var(--muted);">기본값</button>
+        </div>
         <div class="dash-row">
           <div class="card"><div class="card-head"><span class="card-title">반입 / 반출 이력</span><span class="badge-sm badge-live" id="dash-hist-badge">—</span></div><div id="dash-hist-list"></div></div>
           <div class="card"><div class="card-head"><span class="card-title">특이 이력 케이스</span><span class="badge-sm badge-warn">확인 필요</span></div><div id="dash-special-list"></div></div>
@@ -876,9 +884,11 @@ function initApp(){
   const yestStr=FMT(new Date(todayBase.getTime()-86400000));
   const baseLabel=`${yestStr} 07:00 ~ ${ds} 07:00`;
   document.getElementById('tb-date').textContent=ds+' 07:00 기준';
-  document.getElementById('dash-in-date').textContent=baseLabel;
+document.getElementById('dash-in-date').textContent=baseLabel;
   document.getElementById('dash-out-date').textContent=baseLabel;
   document.getElementById('dash-hist-badge').textContent=baseLabel;
+  document.getElementById('dash-from').value=yestStr+'T07:00';
+  document.getElementById('dash-to').value=ds+'T07:00';
   document.getElementById('dash-total').textContent=DB.motors.length;
   ['reg-date','mreg-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=ds;});
   document.getElementById('hist-dt-add').value=now.toISOString().slice(0,16);
@@ -1005,24 +1015,71 @@ function populateSelects(){
 }
 function populateRegForm(){populateSelects();document.getElementById('reg-date').value=FMT(new Date());}
 
-function renderDashHist(){
+let dashFromStr='', dashToStr='';
+function getDashRange(){
+  const now=new Date();
+  const todayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate(),7,0,0);
+  const defFrom=FMT(new Date(todayBase.getTime()-86400000))+' 07:00';
+  const defTo=FMT(todayBase)+' 07:00';
+  return {from: dashFromStr||defFrom, to: dashToStr||defTo};
+}
+function applyDashRange(){
+  const f=document.getElementById('dash-from').value;
+  const t=document.getElementById('dash-to').value;
+  if(!f||!t){alert('시작과 종료 날짜를 모두 선택해주세요.');return;}
+  if(f>=t){alert('종료 날짜가 시작 날짜보다 커야 합니다.');return;}
+  dashFromStr=f.replace('T',' ');
+  dashToStr=t.replace('T',' ');
+  const r=getDashRange();
+  document.getElementById('dash-hist-badge').textContent=r.from.slice(0,16)+' ~ '+r.to.slice(0,16);
+  renderDashHist();renderDashSpecial();
+}
+function resetDashRange(){
+  dashFromStr='';dashToStr='';
   const now=new Date(),ds=FMT(now);
   const todayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate(),7,0,0);
-  const yBStr=FMT(new Date(todayBase.getTime()-86400000))+' 07:00',tBStr=ds+' 07:00';
-  const items=DB.motors.flatMap(m=>m.history.filter(h=>h.dt>=yBStr&&h.dt<tBStr&&(h.type==='반입'||h.type==='반출')).map(h=>({...h,mname:m.name,mcap:m.cap,mcode:m.matCode,matId:m.matId,motorId:m.id})));
+  const yest=FMT(new Date(todayBase.getTime()-86400000));
+  document.getElementById('dash-from').value=yest+'T07:00';
+  document.getElementById('dash-to').value=ds+'T07:00';
+  document.getElementById('dash-hist-badge').textContent=yest+' 07:00 ~ '+ds+' 07:00';
+  renderDashHist();renderDashSpecial();
+}
+function renderDashHist(){
+  const {from,to}=getDashRange();
+  const items=DB.motors.flatMap(m=>m.history.filter(h=>h.dt>=from&&h.dt<=to&&(h.type==='반입'||h.type==='반출')).map(h=>({...h,mname:m.name,mcap:m.cap,mcode:m.matCode,matId:m.matId,motorId:m.id})));
   items.sort((a,b)=>b.dt.localeCompare(a.dt));
   const el=document.getElementById('dash-hist-list');
-  if(!items.length){el.innerHTML='<div style="padding:16px 0;text-align:center;color:var(--hint);font-size:12px;">해당 시간 내 이력 없음</div>';return;}
-  el.innerHTML=items.slice(0,6).map(h=>`<div class="hist-item"><span class="htag ${h.type==='반입'?'in':'out'}">${h.type}</span><span class="hcode">${h.mcode}</span><span class="hname" style="cursor:pointer;color:var(--blue);text-decoration:underline;" onclick="openDetail('${h.motorId}')">${h.matId}</span><span class="hloc">${h.mname} ${h.mcap} / ${h.toLoc}</span><span class="htime">${h.dt}</span><span class="huser">${h.by}</span></div>`).join('');
+  if(!items.length){el.innerHTML='<div style="padding:16px 0;text-align:center;color:var(--hint);font-size:12px;">해당 기간 이력 없음</div>';return;}
+  el.innerHTML=items.slice(0,8).map(h=>`<div class="hist-item"><span class="htag ${h.type==='반입'?'in':'out'}">${h.type}</span><span class="hcode">${h.mcode}</span><span class="hname" style="cursor:pointer;color:var(--blue);text-decoration:underline;" onclick="openDetail('${h.motorId}')">${h.matId}</span><span class="hloc">${h.mname} ${h.mcap} / ${h.toLoc}</span><span class="htime">${h.dt}</span><span class="huser">${h.by}</span></div>`).join('');
 }
 function renderDashSpecial(){
+  const {from,to}=getDashRange();
   const el=document.getElementById('dash-special-list');
-  if(!DB.specialIssues.length){el.innerHTML='<div style="padding:16px 0;text-align:center;color:var(--hint);font-size:12px;">특이 이력 없음</div>';return;}
-  const ic={지연:'var(--red)',확인필요:'var(--amber)',점검예정:'var(--blue)',기타:'var(--muted)'};
-  el.innerHTML=DB.specialIssues.map(s=>{
-    const m=DB.motors.find(x=>x.id===s.motorId);if(!m)return'';
-    return `<div class="special-item" style="cursor:pointer;" onclick="openDetail('${m.id}')"><span style="color:${ic[s.type]||'var(--muted)'};font-size:14px;flex-shrink:0;">${s.icon}</span><div style="flex:1;"><div class="s-title">${m.matCode} / <span style="color:var(--blue);">${m.matId}</span> — ${m.name} ${m.cap}</div><div class="s-desc">${s.desc}</div><div class="s-meta"><span class="tag-s ${s.tagClass}">${s.type}</span><span class="tag-s tag-i">${m.loc}${m.shelf?' · '+m.shelf:''}</span></div></div></div>`;
+  const specialTypes=['수리','점검','기타'];
+  const ic={수리:'var(--red)',점검:'var(--blue)',기타:'var(--muted)'};
+  const icon={수리:'🔧',점검:'🔍',기타:'📋'};
+  const items=DB.motors.flatMap(m=>
+    m.history.filter(h=>h.dt>=from&&h.dt<=to&&specialTypes.includes(h.type))
+    .map(h=>({...h,motor:m}))
+  );
+  items.sort((a,b)=>b.dt.localeCompare(a.dt));
+  if(!items.length){el.innerHTML='<div style="padding:16px 0;text-align:center;color:var(--hint);font-size:12px;">해당 기간 특이 이력 없음</div>';return;}
+  el.innerHTML=items.map(h=>{
+    const m=h.motor;
+    return `<div class="special-item" style="cursor:pointer;" onclick="openDetail('${m.id}')">
+      <span style="font-size:16px;flex-shrink:0;">${icon[h.type]||'📋'}</span>
+      <div style="flex:1;">
+        <div class="s-title">${m.matCode} / <span style="color:var(--blue);">${m.matId}</span> — ${m.name} ${m.cap}</div>
+        <div class="s-desc">${h.memo||'(메모 없음)'}</div>
+        <div class="s-meta">
+          <span class="tag-s" style="background:rgba(153,27,27,.1);color:var(--red);">${h.type}</span>
+          <span class="tag-s tag-i">${h.toLoc}</span>
+          <span style="font-size:10px;color:var(--hint);">${h.dt} · ${h.by}</span>
+        </div>
+      </div>
+    </div>`;
   }).join('');
+  document.getElementById('dash-special-cnt').textContent=items.length;
 }
 function openDashModal(type){
   const now=new Date(),ds=FMT(now);
