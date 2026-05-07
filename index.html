@@ -1136,7 +1136,54 @@ function doPrint(){
   if(!qrDataUrl&&img&&img.src.startsWith('data:'))qrDataUrl=img.src;
   const baseUrl=window.location.href.split('?')[0];const qrUrl=baseUrl+'?scan='+encodeURIComponent(m.matId);
   const lastH=m.history.length?m.history[m.history.length-1]:null;
-  const ph=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>자재 인쇄</title><style>@page{size:A4 landscape;margin:10mm 12mm;}*{box-sizing:border-box;margin:0;padding:0;}html,body{width:277mm;height:190mm;overflow:hidden;font-family:'Malgun Gothic',sans-serif;color:#111;background:#fff;font-size:11pt;}.page-wrap{display:flex;flex-direction:column;height:190mm;}.header-bar{display:flex;align-items:center;justify-content:space-between;padding-bottom:5mm;border-bottom:1.5px solid #222;margin-bottom:5mm;flex-shrink:0;}.h-title{font-size:16pt;font-weight:700;}.h-sub{font-size:9pt;color:#666;margin-top:2px;}.h-badge{background:#0f5a38;color:#fff;font-size:8pt;font-weight:700;padding:3px 10px;border-radius:3px;}.body-row{display:flex;gap:8mm;flex:1;min-height:0;}.info-table{flex:1;border-collapse:collapse;font-size:10.5pt;}.info-table td{padding:3.5mm 4mm;border:0.5px solid #ccc;vertical-align:middle;}.lbl{background:#f5f5f5;color:#555;font-weight:600;width:30%;}.val{font-weight:500;}.qr-block{width:55mm;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1.5px solid #ccc;border-radius:6px;padding:5mm 4mm;text-align:center;}.qr-block img{width:44mm;height:44mm;}.qr-lbl{font-size:8pt;color:#444;font-weight:600;margin-top:3mm;}.qr-id{font-size:10pt;font-weight:700;color:#0f5a38;margin-top:1.5mm;}.qr-url{font-size:6.5pt;color:#aaa;word-break:break-all;margin-top:2mm;}.footer{flex-shrink:0;border-top:0.5px solid #ddd;margin-top:4mm;padding-top:2mm;display:flex;justify-content:space-between;font-size:7.5pt;color:#aaa;}</style></head><body><div class="page-wrap"><div class="header-bar"><div><div class="h-title">${m.name} ${m.cap}</div><div class="h-sub">${m.matCode} / ${m.matId}</div></div><div class="h-badge">MMS 자재 관리</div></div><div class="body-row"><table class="info-table"><tr><td class="lbl">자재코드</td><td class="val">${m.matCode}</td></tr><tr><td class="lbl">자재 ID</td><td class="val">${m.matId}</td></tr><tr><td class="lbl">자재명</td><td class="val">${m.name}</td></tr><tr><td class="lbl">Maker</td><td class="val">${m.maker||'-'}</td></tr><tr><td class="lbl">용량</td><td class="val">${m.cap||'-'}</td></tr><tr><td class="lbl">저장위치</td><td class="val">${m.loc}${m.shelf?' / '+m.shelf:''}</td></tr><tr><td class="lbl">상태</td><td class="val">${m.status}</td></tr><tr><td class="lbl">등록일</td><td class="val">${m.regDate}</td></tr><tr><td class="lbl">등록자</td><td class="val">${m.regBy}</td></tr>${lastH?`<tr><td class="lbl">최종이력</td><td class="val">${lastH.dt} ${lastH.type}</td></tr>`:''}</table><div class="qr-block">${qrDataUrl?`<img src="${qrDataUrl}">`:'<div style="width:44mm;height:44mm;border:1px dashed #ccc;"></div>'}<div class="qr-lbl">📱 스캔하여 자재 조회</div><div class="qr-id">${m.matId}</div><div class="qr-url">${qrUrl}</div></div></div><div class="footer"><span>출력일시: ${FMTDT(new Date())}</span><span>MMS — 모터 자재 관리 시스템</span></div></div><script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script></body></html>`;
+  const ph=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>자재 인쇄</title><style>
+@page{size:100mm 70mm;margin:4mm 5mm;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100mm;height:70mm;overflow:hidden;font-family:'Malgun Gothic','맑은 고딕',sans-serif;color:#000;background:#fff;font-size:13pt;}
+.page-wrap{display:flex;flex-direction:column;height:62mm;}
+.header-bar{display:flex;align-items:center;justify-content:space-between;padding-bottom:2mm;border-bottom:1.5px solid #000;margin-bottom:2mm;flex-shrink:0;}
+.h-title{font-size:15pt;font-weight:700;color:#000;}
+.h-sub{font-size:10pt;color:#333;margin-top:1px;}
+.h-badge{background:#0f5a38;color:#fff;font-size:8pt;font-weight:700;padding:2px 6px;border-radius:3px;}
+.body-row{display:flex;gap:3mm;flex:1;min-height:0;}
+.info-table{flex:1;border-collapse:collapse;font-size:11pt;}
+.info-table td{padding:1.5mm 2mm;border:0.5px solid #888;vertical-align:middle;}
+.lbl{background:#f0f0f0;color:#000;font-weight:700;width:28%;}
+.val{font-weight:600;color:#000;}
+.qr-block{width:28mm;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #999;border-radius:4px;padding:2mm;text-align:center;}
+.qr-block img{width:24mm;height:24mm;}
+.qr-lbl{font-size:7pt;color:#333;font-weight:600;margin-top:1.5mm;}
+.qr-id{font-size:9pt;font-weight:700;color:#0f5a38;margin-top:1mm;}
+.footer{flex-shrink:0;border-top:0.5px solid #ccc;margin-top:2mm;padding-top:1mm;display:flex;justify-content:space-between;font-size:7pt;color:#666;}
+</style></head><body>
+<div class="page-wrap">
+<div class="header-bar">
+  <div><div class="h-title">${m.name} ${m.cap}</div><div class="h-sub">${m.matCode} / ${m.matId}</div></div>
+  <div class="h-badge">MMS 자재 관리</div>
+</div>
+<div class="body-row">
+  <table class="info-table">
+    <tr><td class="lbl">자재코드</td><td class="val">${m.matCode}</td></tr>
+    <tr><td class="lbl">자재 ID</td><td class="val">${m.matId}</td></tr>
+    <tr><td class="lbl">Maker</td><td class="val">${m.maker||'-'}</td></tr>
+    <tr><td class="lbl">용량</td><td class="val">${m.cap||'-'}</td></tr>
+    <tr><td class="lbl">저장위치</td><td class="val">${m.loc}${m.shelf?' / '+m.shelf:''}</td></tr>
+    <tr><td class="lbl">상태</td><td class="val">${m.status}</td></tr>
+    ${lastH?`<tr><td class="lbl">최종이력</td><td class="val">${lastH.dt.slice(0,10)} ${lastH.type}</td></tr>`:''}
+  </table>
+  <div class="qr-block">
+    ${qrDataUrl?`<img src="${qrDataUrl}">`:'<div style="width:24mm;height:24mm;border:1px dashed #ccc;"></div>'}
+    <div class="qr-lbl">스캔하여 자재 조회</div>
+    <div class="qr-id">${m.matId}</div>
+  </div>
+</div>
+<div class="footer">
+  <span>출력: ${FMTDT(new Date())}</span>
+  <span>MMS — 모터 자재 관리 시스템</span>
+</div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>
+</body></html>`;
   const blob=new Blob([ph],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const w=window.open(url,'_blank','width=640,height=520');
