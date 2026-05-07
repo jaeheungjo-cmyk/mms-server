@@ -334,8 +334,19 @@ def get_history():
     conn.close()
     return jsonify([dict(r) for r in rows])
 
-@app.route('/api/motors/<mid>/history', methods=['POST'])
-def add_history(mid):
+@app.route('/api/motors/<mid>/history/<int:hid>', methods=['PUT'])
+def update_history(mid, hid):
+    d = request.json
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE history SET type=%s, to_loc=%s, dt=%s, memo=%s WHERE id=%s AND motor_id=%s",
+              (d['type'], d['toLoc'], d['dt'], d.get('memo',''), hid, mid))
+    if d['type'] in ('반입','반출','수리'):
+        new_status = {'반입':'재고','반출':'반출중','수리':'수리중'}.get(d['type'])
+        c.execute("UPDATE motors SET loc=%s, status=%s WHERE id=%s", (d['toLoc'], new_status, mid))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok':True})
     d = request.json
     conn = get_db()
     c = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
