@@ -1139,8 +1139,8 @@ function doPrint(){
   const ph=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>자재 인쇄</title><style>
 @page{size:100mm 70mm;margin:3mm 4mm;}
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100mm;height:70mm;overflow:hidden;font-family:'Malgun Gothic','맑은 고딕',sans-serif;color:#000;background:#fff;}
-.page-wrap{display:flex;flex-direction:column;height:64mm;overflow:hidden;}
+html,body{width:100mm;height:70mm;max-height:70mm;overflow:hidden;font-family:'Malgun Gothic','맑은 고딕',sans-serif;color:#000;background:#fff;}
+.page-wrap{display:flex;flex-direction:column;height:63mm;overflow:hidden;page-break-after:avoid;}
 .header-bar{display:flex;align-items:center;justify-content:space-between;padding-bottom:1.5mm;border-bottom:1.5px solid #000;margin-bottom:1.5mm;flex-shrink:0;}
 .h-title{font-size:13pt;font-weight:700;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60mm;}
 .h-sub{font-size:8.5pt;color:#333;margin-top:1px;}
