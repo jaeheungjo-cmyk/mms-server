@@ -666,6 +666,22 @@ tr:hover td{background:#f9fafb;}
   </div>
 </div>
 
+<div class="overlay" id="modal-edit-hist">
+  <div class="modal" style="max-width:420px;">
+    <div class="mhead"><span class="mtitle">이력 수정</span><button class="mclose" onclick="closeModal('modal-edit-hist')">✕</button></div>
+    <div class="form-grid">
+      <div class="fg"><label>유형</label><select id="edit-hist-type"><option>반입</option><option>반출</option><option>수리</option><option>점검</option><option>기타</option></select></div>
+      <div class="fg"><label>변경 위치</label><select id="edit-hist-loc"><option value="">-- 선택 --</option></select></div>
+      <div class="fg"><label>일시</label><input type="datetime-local" id="edit-hist-dt"></div>
+      <div class="fg full" style="grid-column:1/-1"><label>비고</label><input type="text" id="edit-hist-memo" placeholder="이력 내용"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" onclick="saveEditHist()">저장</button>
+      <button class="btn" onclick="closeModal('modal-edit-hist')">취소</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-print">
   <div class="modal sm">
     <div class="mhead"><span class="mtitle">자재 정보 인쇄</span><button class="mclose" onclick="closeModal('modal-print')">✕</button></div>
@@ -1158,14 +1174,7 @@ function renderDetailHist(m){
   const tc={반입:'in',반출:'out',수리:'rep',점검:'rep',기타:'rep'};
   document.getElementById('detail-hist-tbody').innerHTML=m.history.slice().reverse().map((h,i)=>{
     const realIdx=m.history.length-1-i;
-    return `<tr>
-      <td style="font-size:11px;color:var(--muted);">${h.dt}</td>
-      <td><span class="htag ${tc[h.type]||'rep'}">${h.type}</span></td>
-      <td style="font-size:11px;">${h.toLoc||'-'}</td>
-      <td style="font-size:11px;color:var(--blue);font-weight:500;">${h.by}</td>
-      <td style="font-size:11px;color:var(--muted);">${h.memo||'-'}</td>
-      <td><button class="rbtn blue" onclick="openEditHist(${realIdx})" style="font-size:10px;padding:2px 7px;">수정</button></td>
-    </tr>`;
+    return `<tr><td style="font-size:11px;color:var(--muted);">${h.dt}</td><td><span class="htag ${tc[h.type]||'rep'}">${h.type}</span></td><td style="font-size:11px;">${h.toLoc||'-'}</td><td style="font-size:11px;color:var(--blue);font-weight:500;">${h.by}</td><td style="font-size:11px;color:var(--muted);">${h.memo||'-'}</td><td><button class="rbtn blue" onclick="openEditHist(${realIdx})" style="font-size:10px;padding:2px 7px;">수정</button></td></tr>`;
   }).join('');
 }
 async function addHistory(){
@@ -1180,6 +1189,36 @@ async function addHistory(){
   const updated=DB.motors.find(x=>x.id===currentMotorId);
   renderDetailHist(updated);renderMotorList();renderDashHist();
 document.getElementById('hist-memo-add').value='';showToast('이력이 추가되었습니다.');
+}
+
+let editHistIdx=null;
+function openEditHist(idx){
+  const m=DB.motors.find(x=>x.id===currentMotorId);if(!m)return;
+  const h=m.history[idx];if(!h)return;
+  editHistIdx=idx;
+  const locOpts=DB.locations.map(l=>`<option value="${l.name}">${l.name}</option>`).join('');
+  document.getElementById('edit-hist-type').value=h.type;
+  document.getElementById('edit-hist-dt').value=h.dt.replace(' ','T');
+  document.getElementById('edit-hist-memo').value=h.memo||'';
+  document.getElementById('edit-hist-loc').innerHTML='<option value="">-- 선택 --</option>'+locOpts;
+  document.getElementById('edit-hist-loc').value=h.toLoc||'';
+  openModal('modal-edit-hist');
+}
+async function saveEditHist(){
+  const m=DB.motors.find(x=>x.id===currentMotorId);if(!m)return;
+  const h=m.history[editHistIdx];if(!h)return;
+  if(!h.id){showToast('이 이력은 수정할 수 없습니다','warn');return;}
+  const type=document.getElementById('edit-hist-type').value;
+  const toLoc=document.getElementById('edit-hist-loc').value;
+  const dt=document.getElementById('edit-hist-dt').value.replace('T',' ');
+  const memo=document.getElementById('edit-hist-memo').value.trim();
+  if(!toLoc){showToast('위치를 선택하세요','warn');return;}
+  await api(`/api/motors/${m.id}/history/${h.id}`,'PUT',{type,toLoc,dt,memo});
+  closeModal('modal-edit-hist');
+  await loadAllData();
+  const updated=DB.motors.find(x=>x.id===currentMotorId);
+  renderDetailHist(updated);renderMotorList();renderDashHist();
+  showToast('이력이 수정되었습니다.');
 }
 
 let editHistIdx = null;
