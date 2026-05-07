@@ -1221,7 +1221,6 @@ async function saveEditHist(){
   showToast('이력이 수정되었습니다.');
 }
 
-let editHistIdx = null;
 function openEditHist(idx){
   const m = DB.motors.find(x=>x.id===currentMotorId); if(!m) return;
   const h = m.history[idx]; if(!h) return;
