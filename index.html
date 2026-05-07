@@ -1182,11 +1182,11 @@ html,body{width:100mm;height:70mm;max-height:70mm;overflow:hidden;font-family:'M
   <span>MMS — 모터 자재 관리 시스템</span>
 </div>
 </div>
-<script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>
+<script>window.onload=function(){setTimeout(function(){var b=document.body;b.style.overflow='hidden';b.style.height='70mm';b.style.maxHeight='70mm';document.documentElement.style.overflow='hidden';document.documentElement.style.height='70mm';window.print();window.close();},600);};<\/script>
 </body></html>`;
-  const blob=new Blob([ph],{type:'text/html;charset=utf-8'});
+const blob=new Blob([ph],{type:'text/html;charset=utf-8'});
   const url=URL.createObjectURL(blob);
-  const w=window.open(url,'_blank','width=640,height=520');
+  const w=window.open(url,'_blank','width=400,height=300');
   if(!w){alert('팝업이 차단되었습니다.');return;}
   setTimeout(()=>URL.revokeObjectURL(url),15000);
 }
