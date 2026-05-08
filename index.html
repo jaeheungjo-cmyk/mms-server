@@ -1354,7 +1354,7 @@ function openLayoutModal(locName,shelfName){
 function drawLayout(locName){
   const img=document.getElementById('layout-bg-img'),svg=document.getElementById('layout-svg');
   svg.innerHTML='';
-  const _ln=locName;
+  const _ln=(locName||'').trim();
   function rm(){
     svg.setAttribute('viewBox','0 0 800 1131');
     const am=LOC_TO_MARKER[_ln]||'';
